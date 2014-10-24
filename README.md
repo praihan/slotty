@@ -173,4 +173,4 @@ This is project is licensed under the Apache License 2.0. You can find a copy of
 
 * Pranjal Raihan
 
-Check out the [`AUTHORS`](AUTHORS) for the most recently updated list,
+Check out the [`AUTHORS`](AUTHORS) for the most recently updated list.
