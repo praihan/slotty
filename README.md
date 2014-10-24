@@ -159,7 +159,7 @@ int main(int, char**)
 
 ### Installation
 
-Copy the file `slotty.h` to your includes directory and you are good to go! This is a **header-only** library, **no linking required**. Just make sure your compiler is **C++11 compliant** *(especially supporting **variadic templates**)*.
+Copy the file `slotty.h` to your includes directory and you are good to go! This is a **header-only** library, **no linking required**. Just make sure your compiler is **C++11 compliant** *(especially supporting variadic templates)*.
 
 ***
 
