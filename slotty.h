@@ -63,7 +63,11 @@ namespace slotty
         /**
          * \brief the non-virtual destructor
          */
-        ~slot();
+        ~slot()
+        {
+            auto& listeners = this->event_->listeners_;
+            listeners.erase(std::remove(listeners.begin(), listeners.end(), this), listeners.end());
+        }
 
     private:
         /**
@@ -114,7 +118,14 @@ namespace slotty
          */
         slot_type* connect(
             callback_type callback //!< [in] the callback function
-        ) const;
+        ) const
+        {
+            auto s = new typename event<contexts...>::slot_type();
+            s->event_ = this;
+            s->callback_ = callback;
+            this->listeners_.push_back(s);
+            return s;
+        }
 
         /**
          * \brief raise the event
@@ -123,7 +134,14 @@ namespace slotty
          */
         void raise(
             contexts... args //!< [in] the event arguments
-        );
+        )
+        {
+            for (auto i = this->listeners_.begin(); i != this->listeners_.end(); ++i)
+            {
+                auto& f = *(*i);
+                f.callback_(args...);
+            }
+        }
 
     private:
         /**
@@ -144,40 +162,6 @@ namespace slotty
 
         friend class slot<contexts...>;
     };
-
-
-
-
-    // template implementation
-
-    template <typename... contexts>
-    typename event<contexts...>::slot_type* event<contexts...>::connect(
-        typename event<contexts...>::callback_type callback
-    ) const
-    {
-        auto s = new typename event<contexts...>::slot_type();
-        s->event_ = this;
-        s->callback_ = callback;
-        this->listeners_.push_back(s);
-        return s;
-    }
-
-    template <typename... contexts>
-    void event<contexts...>::raise(contexts... args)
-    {
-        for (auto i = this->listeners_.begin(); i != this->listeners_.end(); ++i)
-        {
-            auto& f = *(*i);
-            f.callback_(args...);
-        }
-    }
-
-    template <typename... contexts>
-    slot<contexts...>::~slot()
-    {
-        auto& listeners = this->event_->listeners_;
-        listeners.erase(std::remove(listeners.begin(), listeners.end(), this), listeners.end());
-    }
 
 }
 
