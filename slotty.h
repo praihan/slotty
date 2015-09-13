@@ -1,6 +1,4 @@
 #pragma once
-#ifndef __slotty_h__
-#define __slotty_h__
 
 /*
  * slotty.h
@@ -25,7 +23,7 @@
  * limitations under the License.
  *****************************************************************************/
 
-#include <vector>
+#include <list>
 #include <algorithm>
 #include <functional>
 
@@ -43,12 +41,13 @@ namespace slotty
          */
         typedef std::function<void(contexts...)> callback_type;
 
-    private:
+    public:
         /**
          * \brief the default constructor
          */
         explicit slot() = default;
 
+    private:
         /**
          * \brief no copy
          */
@@ -111,20 +110,17 @@ namespace slotty
          *
          * The lifetime of the listener is tied to the slot returned. 
          * When the slot is deleted (destructor is called), the 
-         * listener is also invalidated. The slot returned is completely 
-         * owned by the caller and must be delete'd by the user.
-         *
-         * \return the slot object for listener lifetime control
+         * listener is also invalidated. The slot filled is completely 
+         * owned by the caller and must be delete'd by the caller.
          */
-        slot_type* connect(
-            callback_type callback //!< [in] the callback function
+        void connect(
+            callback_type callback, //!< [in] the callback function
+            slot_type& slot //!< [in] the slot of fill
         ) const
         {
-            auto s = new typename event<contexts...>::slot_type();
-            s->event_ = this;
-            s->callback_ = callback;
-            this->listeners_.push_back(s);
-            return s;
+            slot.event_ = this;
+            slot.callback_ = callback;
+            this->listeners_.push_back(&slot);
         }
 
         /**
@@ -158,11 +154,17 @@ namespace slotty
         /**
          * \brief list of listeners
          */
-        mutable std::vector<slot_type*> listeners_;
+        mutable std::list<slot_type*> listeners_;
 
         friend class slot<contexts...>;
     };
 
-}
+    template <typename... contexts>
+    class event_slot_pair
+    {
+    public:
+        event<contexts...> event;
+        slot<contexts...> slot;
+    };
 
-#endif
+}

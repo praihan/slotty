@@ -1,50 +1,43 @@
 #include "../slotty.h"
 
 #include <string>
-#include <functional>
 #include <iostream>
-#include <memory>
 
 class Button
 {
 public:
-	typedef slotty::event<int, int> event_type;
+    Button()
+    {
+        resize().connect([=](int x, int y){ on_resized(x, y); }, resize_evt_pair.slot);
+    }
 
-	Button(const event_type& evt)
-	{
-		this->slot_ =
-			std::unique_ptr<typename event_type::slot_type>(
-				evt.connect(
-					std::bind(
-						&Button::on_resized,
-						this,
-						std::placeholders::_1,
-						std::placeholders::_2
-					)
-				)
-			);
-	}
+    const slotty::event<int, int>& resize() const
+    {
+        return resize_evt_pair.event;
+    }
+
+    void resize(int x, int y)
+    {
+        resize_evt_pair.event.raise(x, y);
+    }
 
 private:
-	void on_resized(int new_width, int new_height)
-	{
-		std::cout << "New size: " << new_width << ", " << new_height << std::endl;
-	}
+    slotty::event_slot_pair<int, int> resize_evt_pair;
 
-private:
-	std::unique_ptr<event_type::slot_type> slot_;
+    void on_resized(int new_width, int new_height)
+    {
+        std::cout << "New size: " << new_width << ", " << new_height << std::endl;
+    }
 };
 
 int main(int, char**)
 {
-	Button::event_type evt;
-	Button* foo = new Button(evt);
+    {
+        Button btn;
+        btn.resize(500, 500);
+    }
 
-	evt.raise(500, 500);
+    std::cin.get();
 
-	delete foo;
-
-	std::cin.get();
-
-	return 0;
+    return 0;
 }

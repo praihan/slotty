@@ -2,22 +2,27 @@
 
 #include <iostream>
 
+template<class T>
+struct identity{ typedef T type; };
+
 int main(int, char**)
 {
-	slotty::event<const char*, const char*> some_evt;
+    slotty::event<const char*, const char*> some_evt;
 
-	slotty::slot<const char*, const char*>* slot =
-		some_evt.connect([](const char* a, const char* b) {
-			std::cout << a << " " << b << std::endl;;
-		});
+    {
+        identity<decltype(some_evt)>::type::slot_type slot;
 
-	some_evt.raise("Hello", "World");
+        some_evt.connect([](const char* a, const char* b) {
+            std::cout << a << " " << b << std::endl;
+        }, slot);
 
-	delete slot;
+        some_evt.raise("Hello", "World");
+    }
+    // slot deleted
 
-	some_evt.raise("Never", "Printed");
+    some_evt.raise("Never", "Printed");
 
-	std::cin.get();
+    std::cin.get();
 
-	return 0;
+    return 0;
 }

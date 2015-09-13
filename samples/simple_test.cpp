@@ -4,28 +4,30 @@
 
 void listener(int arg)
 {
-	static bool fail = false;
-	if (fail)
-	{
-		throw std::exception("FAILED");
-	}
-	fail = true;
-	std::cout << "ARGS RECEIVED: " << arg << std::endl;
+    static bool fail = false;
+    if (fail)
+    {
+        throw std::exception("FAILED");
+    }
+    fail = true;
+    std::cout << "ARGS RECEIVED: " << arg << std::endl;
 }
 
 int main(int, char**)
 {
-	slotty::event<int> evt;
+    using event_type = slotty::event<int>;
 
-	slotty::slot<int>* slot = evt.connect(&listener);
+    event_type evt;
 
-	evt.raise(0);
+    {
+        event_type::slot_type slot;
+        evt.connect(&listener, slot);
+        evt.raise(0);
+    }
 
-	delete slot;
+    evt.raise(1);
 
-	evt.raise(1);
+    std::cin.get();
 
-	std::cin.get();
-
-	return 0;
+    return 0;
 }

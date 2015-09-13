@@ -27,30 +27,32 @@ A small and simple example:
 #include <slotty.h> // get slotty
 #include <iostream> // for cout and endl
 
-using namespace std;
-using namespace slotty;
-
 void listener(int arg)
 {
-    cout << "ARG RECEIVED: " << arg << endl;
+    static bool fail = false;
+    if (fail)
+    {
+        throw std::exception("FAILED");
+    }
+    fail = true;
+    std::cout << "ARGS RECEIVED: " << arg << std::endl;
 }
 
 int main(int, char**)
 {
-    // create the actual event object
-    event<int> evt;
-    
-    // connect 'listener' to the event and get the slot
-    slot<int>* slot = evt.connect(&listener);
+    using event_type = slotty::event<int>;
 
-    // raise the event, 'listener' is called
-    evt.raise(0);
+    event_type evt;
 
-    // the slot is being deleted, so the listener is no longer valid
-    delete slot;
+    {
+        event_type::slot_type slot;
+        evt.connect(&listener, slot);
+        evt.raise(0);
+    }
 
-    // nothing happens
     evt.raise(1);
+
+    std::cin.get();
 
     return 0;
 }
@@ -61,67 +63,44 @@ Or a more practical use:
 ```c++
 #include <slotty.h> // get slotty
 
-#include <string> // string
-#include <functional> // bind
-#include <iostream> // cout and endl
-#include <memory> // unique_ptr
+#include <string>
+#include <iostream>
 
-using namespace std;
-using namespace std::placeholders;
-using namespace slotty;
-
-// some class that represents a button on a window
 class Button
 {
-private:
-    // an automatic pointer, delete's the contents during destruction
-    // when this is deleted, the listener is also invalidated
-    unique_ptr<event_type::slot_type> slot_;
 public:
-    // give it a smaller name
-    typedef event<int, int> event_type;
-
-    // this constructor is just for convenience of this sample
-    Button(const event_type& evt)
+    Button()
     {
-        // assign the slot
-        this->slot_ =
-            std::unique_ptr<typename event_type::slot_type>(
-                evt.connect(
-                    bind(
-                        &Button::on_resized, // the member method
-                        this, // the instance to be bound
-                        _1, // the first param
-                        _2  // the second param
-                    )
-                )
-            );
+        resize().connect([=](int x, int y){ on_resized(x, y); }, resize_evt_pair.slot);
+    }
+
+    const slotty::event<int, int>& resize() const
+    {
+        return resize_evt_pair.event;
+    }
+
+    void resize(int x, int y)
+    {
+        resize_evt_pair.event.raise(x, y);
     }
 
 private:
-    // the listener/callback
+    slotty::event_slot_pair<int, int> resize_evt_pair;
+
     void on_resized(int new_width, int new_height)
     {
-        cout << "New size: " << new_width << ", " << new_height << endl;
+        std::cout << "New size: " << new_width << ", " << new_height << std::endl;
     }
 };
 
 int main(int, char**)
 {
-    // create the event from the typedef
-    Button::event_type evt;
-    
-    // create a new button with the event
-    // the listener is already registered
-    Button* foo = new Button(evt);
+    {
+        Button btn;
+        btn.resize(500, 500);
+    }
 
-    // raises the event, the 'on_resized' in 'foo' is called
-    evt.raise(500, 500);
-
-    // when 'foo' is deleted, the unique_ptr is also deleted 
-    // invalidating the slot. i.e. the slot's lifetime is equal 
-    // to the lifetime of 'foo'
-    delete foo;
+    std::cin.get();
 
     return 0;
 }
@@ -133,23 +112,27 @@ You could even use lambda functions:
 #include <slotty.h> // get slotty
 #include <iostream> // for cout and endl
 
-using namespace std;
-using namespace slotty;
+template<class T>
+struct identity{ typedef T type; };
 
 int main(int, char**)
 {
-    event<const char*, const char*> some_evt;
+    slotty::event<const char*, const char*> some_evt;
 
-    slot<const char*, const char*>* slot =
+    {
+        identity<decltype(some_evt)>::type::slot_type slot;
+
         some_evt.connect([](const char* a, const char* b) {
-            cout << a << " " << b << endl;;
-        });
+            std::cout << a << " " << b << std::endl;
+        }, slot);
 
-    some_evt.raise("Hello", "World");
-
-    delete slot;
+        some_evt.raise("Hello", "World");
+    }
+    // slot deleted
 
     some_evt.raise("Never", "Printed");
+
+    std::cin.get();
 
     return 0;
 }
