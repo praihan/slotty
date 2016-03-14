@@ -33,7 +33,7 @@ private:
 
 public:
   ~slot() {
-    std::lock_guard<typename Policy::mutex> lk(this->event_->mutex_);
+    std::lock_guard<typename Policy::mutex_type> lk(this->event_->mutex_);
     auto& l = this->event_->listeners_;
     l.erase(std::remove(l.begin(), l.end(), this), l.end());
   }
@@ -64,14 +64,14 @@ public:
   ~event() = default;
 
   template <typename F> void connect(F&& callback, slot_type& slot) const {
-    std::lock_guard<typename Policy::mutex> lk(mutex_);
+    std::lock_guard<typename Policy::mutex_type> lk(mutex_);
     slot.event_ = this;
     slot.callback_ = std::forward<F>(callback);
     this->listeners_.push_back(std::addressof(slot));
   }
 
   void raise(Args... args) {
-    std::lock_guard<typename Policy::mutex> lk(mutex_);
+    std::lock_guard<typename Policy::mutex_type> lk(mutex_);
     for (auto& l : listeners_)
       l->callback_(std::forward(args)...);
   }
@@ -82,7 +82,7 @@ private:
 
 private:
   mutable typename Policy::template container_type<slot_type*> listeners_;
-  mutable typename Policy::mutex mutex_;
+  mutable typename Policy::mutex_type mutex_;
 
   friend class detail::slot<Policy, Args...>;
 };
@@ -101,12 +101,12 @@ struct null_basic_mutex {
 
 struct default_synchronized_policy {
   template <typename T> using container_type = std::vector<T>;
-  using mutex = std::mutex;
+  using mutex_type = std::mutex;
 };
 
 struct default_policy {
   template <typename T> using container_type = std::vector<T>;
-  using mutex = null_basic_mutex;
+  using mutex_type = null_basic_mutex;
 };
 
 template <typename Policy> struct select_policy {
