@@ -73,7 +73,7 @@ public:
   void raise(Args... args) {
     std::lock_guard<typename Policy::mutex> lk(mutex_);
     for (auto& l : listeners_)
-      l->callback_(args...);
+      l->callback_(std::forward(args)...);
   }
 
 private:
