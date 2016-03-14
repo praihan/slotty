@@ -23,7 +23,7 @@ public:
   };
 
 public:
-  slot() = default;
+  slot() : event_(nullptr) {}
   slot(slot&&) = default;
   slot& operator=(slot&&) = default;
 
@@ -65,6 +65,7 @@ public:
 
   template <typename F> void connect(F&& callback, slot_type& slot) const {
     std::lock_guard<typename Policy::mutex_type> lk(mutex_);
+    // assert(slot.event == nullptr)
     slot.event_ = this;
     slot.callback_ = std::forward<F>(callback);
     this->listeners_.push_back(std::addressof(slot));
