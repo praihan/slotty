@@ -1,5 +1,7 @@
 #pragma once
 
+/// \file
+
 #include <algorithm>
 #include <functional>
 #include <memory>
