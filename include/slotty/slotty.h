@@ -5,8 +5,8 @@
 #include <algorithm>
 #include <functional>
 #include <memory>
-#include <vector>
 #include <mutex>
+#include <vector>
 
 namespace slotty {
 
@@ -35,6 +35,17 @@ private:
 
 public:
   ~slot() {
+    disconnect_assoc_evt_();
+  }
+
+  void disconnect() & {
+    // TODO: throw some kind of exception
+    // if (this->event_ == nullptr) return;
+    disconnect_assoc_evt_();
+  }
+
+private:
+  void disconnect_assoc_evt_() {
     std::lock_guard<typename Policy::mutex_type> lk(this->event_->mutex_);
     auto& l = this->event_->listeners_;
     l.erase(std::remove(l.begin(), l.end(), this), l.end());
@@ -57,6 +68,7 @@ template <typename Policy, typename... Args> class event final {
 public:
   using policy_type = Policy;
   using slot_type = typename detail::slot<Policy, Args...>;
+  using mutex_type = typename Policy::mutex_type;
   template <typename NewPolicy> struct rebind_policy {
     using type = event<NewPolicy, Args...>;
   };
@@ -65,8 +77,8 @@ public:
   event(event&&) = default;
   ~event() = default;
 
-  template <typename F> void connect(F&& callback, slot_type& slot) const & {
-    std::lock_guard<typename Policy::mutex_type> lk(mutex_);
+  template <typename F> void connect(F&& callback, slot_type& slot) const& {
+    std::lock_guard<mutex_type> lk(mutex_);
     // assert(slot.event == nullptr)
     slot.event_ = this;
     slot.callback_ = std::forward<F>(callback);
@@ -74,12 +86,13 @@ public:
   }
 
   void raise(Args... args) & {
-    std::lock_guard<typename Policy::mutex_type> lk(mutex_);
+    std::lock_guard<mutex_type> lk(mutex_);
     for (auto& l : listeners_)
       l->callback_(std::forward(args)...);
   }
 
-
+  mutex_type& enclosed_mutex() & { return mutex_; }
+  const mutex_type& enclosed_mutex() const& { return mutex_; }
 
 private:
   explicit event(const event&) = delete;

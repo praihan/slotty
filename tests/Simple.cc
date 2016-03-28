@@ -7,8 +7,7 @@
 static int modCount = 0;
 
 TEST(TEST_NAME, BasicFunctionality) {
-  slotty::event<> evt;
-
+  slotty::event<> evt{};
   {
     auto slot = slotty::make_slot(evt);
     evt.connect([]() { ++modCount; }, slot);
