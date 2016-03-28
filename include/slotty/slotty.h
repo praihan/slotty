@@ -140,6 +140,12 @@ using event = detail::event<default_policy, Args...>;
 
 template <typename... Args> using slot = detail::slot<default_policy, Args...>;
 
+template <typename... Args>
+using synchronized_event = detail::event<default_synchronized_policy, Args...>;
+
+template <typename... Args>
+using synchronized_slot = detail::slot<default_synchronized_policy, Args...>;
+
 template <typename Policy, typename... Args>
 detail::slot<Policy, Args...>
 make_slot(const detail::event<Policy, Args...>& evt) {
