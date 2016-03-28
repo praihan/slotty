@@ -65,7 +65,7 @@ public:
   event(event&&) = default;
   ~event() = default;
 
-  template <typename F> void connect(F&& callback, slot_type& slot) const {
+  template <typename F> void connect(F&& callback, slot_type& slot) const & {
     std::lock_guard<typename Policy::mutex_type> lk(mutex_);
     // assert(slot.event == nullptr)
     slot.event_ = this;
@@ -78,6 +78,8 @@ public:
     for (auto& l : listeners_)
       l->callback_(std::forward(args)...);
   }
+
+
 
 private:
   explicit event(const event&) = delete;
