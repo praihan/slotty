@@ -73,7 +73,7 @@ public:
     this->listeners_.push_back(std::addressof(slot));
   }
 
-  void raise(Args... args) {
+  void raise(Args... args) & {
     std::lock_guard<typename Policy::mutex_type> lk(mutex_);
     for (auto& l : listeners_)
       l->callback_(std::forward(args)...);
