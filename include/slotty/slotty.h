@@ -34,9 +34,7 @@ private:
   slot& operator=(const slot&) = delete;
 
 public:
-  ~slot() {
-    disconnect_assoc_evt_();
-  }
+  ~slot() { disconnect_assoc_evt_(); }
 
   void disconnect() & {
     // TODO: throw some kind of exception
@@ -85,7 +83,7 @@ public:
     this->listeners_.push_back(std::addressof(slot));
   }
 
-  void raise(Args... args) & {
+  void raise(Args... args)& {
     std::lock_guard<mutex_type> lk(mutex_);
     for (auto& l : listeners_)
       l->callback_(std::forward(args)...);
