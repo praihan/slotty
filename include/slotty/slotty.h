@@ -153,5 +153,5 @@ make_slot(const detail::event<Policy, Args...>& evt) {
 }
 
 template <typename Policy, typename... Args>
-void make_slot(detail::event<Policy, Args...>&& evt) = delete;
+auto make_slot(detail::event<Policy, Args...>&& evt) = delete;
 } // namespace slotty
